@@ -16,7 +16,7 @@ export default class HorScroll {
 
         this._setupElements();
         this._initHorizontalPin();
-        this._initElementsAnimation();
+        // this._initElementsAnimation();
     }
 
     _setupElements() {
@@ -53,6 +53,19 @@ export default class HorScroll {
 
             // this._initElementsAnimation(currentProgress);
 
+            //Peut-être la solution pour d"clencher les imaes au bon moment ???
+            this.images.forEach((img) =>{
+                const rect = img.getBoundingClientRect();
+                const left = rect.left;
+                const right = rect.right;
+
+                if(left < window.innerWidth && right > 0) {
+                    gsap.set(img, {
+                        scale: 0.9 + 0.3 * ((window.innerWidth - left) / (window.innerWidth + rect.width)), // Je ne comprends pas le calcul mais en rajoutant des chiffres un peu au hasard ça fonctionne
+                    })
+                }
+            })
+
 
         } else if (progress > 0.95) {
             gsap.set(this.horizontalContainer, {
@@ -65,18 +78,56 @@ export default class HorScroll {
         }
     }
 
+    // Ne sert pas
     _zoomAnimation(element) {
         gsap.to(element, {
             scale: 1.1,
         })
     }
 
+    //Comment déclencher l'animation au bon moment ????
     _revealText(element) {
-        gsap.to(element, {
-            opacity: 1,
-        })
+        const lines = [];
+        const split = new SplitText(el, {
+            type: "lines",
+            mask: "lines",
+            linesClass: "line++",
+        });
+        const computedStyle = window.getComputedStyle(el);
+        const textIndent = computedStyle.textIndent;
+        if (textIndent && textIndent !== "0px") {
+            if (split.lines.length > 0) {
+                split.lines[0].style.paddingLeft = textIndent;
+            }
+            el.style.textIndent = "0";
+        }
+        lines.push(...split.lines);
+        lines.forEach((line) => {
+            const clone = line.cloneNode(true);
+            line.parentNode.appendChild(clone);
+            gsap.set(clone, { position: "absolute", top: 0, left: 0 });
+
+            gsap.set(line, {
+                opacity: 0.4,
+            });
+            gsap.fromTo(
+                clone,
+                { clipPath: "inset(0 100% 0 0)" },
+                {
+                    clipPath: "inset(0 0% 0 0)",
+                    scrollTrigger: {
+                        trigger: line,
+                        start: "top 80%",
+                        end: "top 60%",
+                        scrub: 1,
+                        ease: "none",
+                    },
+                }
+            );
+        });
     }
 
+    // Ne focntionne pas du tout, à supprimer
     _initElementsAnimation(progress) {
         this.images.forEach((image) => {
             const rect = image.getBoundingClientRect();
