@@ -51,7 +51,7 @@ export default class HorScroll {
                 x: `-${translateX}%`,
             });
 
-            this._initElementsAnimation(currentProgress);
+            // this._initElementsAnimation(currentProgress);
 
 
         } else if (progress > 0.95) {
